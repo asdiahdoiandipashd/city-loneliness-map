@@ -1,0 +1,388 @@
+/* ========== 通用按钮 ========== */
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 100px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 400;
+  font-size: 0.9rem;
+  transition: all 0.5s;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+.hero-cta:hover {
+  background: rgba(122, 156, 198, 0.08);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.nav-cta {
+  padding: 0.4rem 1rem;
+  border-radius: 100px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--accent) !important;
+  font-weight: 400;
+  font-size: 0.8rem;
+  transition: all 0.4s;
+}
+.nav-cta:hover {
+  background: rgba(122, 156, 198, 0.08);
+  border-color: var(--accent);
+}
+
+.demo-btn {
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--accent);
+  font-weight: 400;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.4s;
+  white-space: nowrap;
+}
+.demo-btn:hover {
+  background: rgba(122, 156, 198, 0.08);
+  border-color: var(--accent);
+}
+.demo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 2rem;
+  border-radius: 100px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 400;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.5s;
+  font-family: inherit;
+}
+.cta-btn:hover {
+  background: rgba(122, 156, 198, 0.08);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.nearby-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s;
+  font-size: 0.75rem;
+}
+.nearby-action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(122, 156, 198, 0.04);
+}
+
+.chat-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s;
+  font-size: 0.85rem;
+}
+.chat-action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.chat-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s;
+  font-size: 0.9rem;
+}
+.chat-send-btn:hover {
+  background: rgba(122, 156, 198, 0.08);
+  border-color: var(--accent);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s;
+}
+.modal-close:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.note-submit {
+  padding: 0.55rem 0.875rem;
+  border-radius: 8px;
+  border: 1px solid rgba(196, 167, 125, 0.3);
+  background: transparent;
+  color: var(--warm);
+  font-weight: 400;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.4s;
+  white-space: nowrap;
+}
+.note-submit:hover {
+  background: rgba(196, 167, 125, 0.08);
+  border-color: var(--warm);
+}
+
+/* ========== 卡片类 ========== */
+.feature-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.5s;
+  position: relative;
+  overflow: hidden;
+}
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.feature-card:hover {
+  background: rgba(122, 156, 198, 0.04);
+  border-color: rgba(122, 156, 198, 0.2);
+  transform: translateY(-2px);
+}
+.feature-card:hover::before {
+  opacity: 0.5;
+}
+
+.message-item {
+  background: var(--bg2);
+  border-radius: 10px;
+  padding: 0.875rem;
+  margin-bottom: 0.6rem;
+  border-left: 2px solid var(--accent);
+  transition: all 0.4s;
+}
+.message-item:hover {
+  background: rgba(122, 156, 198, 0.04);
+}
+
+.note-card {
+  background: rgba(196, 167, 125, 0.04);
+  border: 1px solid rgba(196, 167, 125, 0.15);
+  border-radius: 10px;
+  padding: 0.875rem;
+  position: relative;
+  transition: all 0.5s;
+}
+.note-card:hover {
+  border-color: rgba(196, 167, 125, 0.3);
+  background: rgba(196, 167, 125, 0.06);
+}
+
+.result-card {
+  background: var(--bg2);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--rule);
+}
+
+.report-stat {
+  text-align: center;
+  padding: 0.875rem;
+  background: var(--bg);
+  border-radius: 10px;
+  border: 1px solid var(--rule);
+}
+
+.report-insight {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 0.875rem;
+  font-size: 0.8rem;
+  line-height: 1.8;
+  color: var(--ink);
+  font-weight: 300;
+  border: 1px solid var(--rule);
+}
+
+.suggestion-chip {
+  padding: 0.4rem 0.8rem;
+  border-radius: 100px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--accent);
+  font-size: 0.78rem;
+  transition: all 0.4s;
+  cursor: default;
+  font-weight: 300;
+}
+.suggestion-chip:hover {
+  border-color: var(--accent);
+  background: rgba(122, 156, 198, 0.04);
+}
+
+.emotion-tag {
+  padding: 0.25rem 0.65rem;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  transition: all 0.4s;
+  font-weight: 300;
+}
+.emotion-tag:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(122, 156, 198, 0.04);
+}
+
+/* ========== 模态框 ========== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 17, 23, 0.92);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.modal-overlay.show {
+  display: flex;
+  animation: fadeIn 0.4s ease;
+}
+
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  padding: 2rem;
+}
+
+.chat-modal {
+  max-width: 420px;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  border-radius: 16px;
+}
+
+/* ========== 表单输入 ========== */
+.demo-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--rule);
+  background: var(--bg2);
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.4s;
+  font-weight: 300;
+}
+.demo-input:focus {
+  border-color: var(--accent);
+}
+.demo-input::placeholder {
+  color: var(--muted);
+}
+
+.note-input {
+  flex: 1;
+  padding: 0.55rem 0.875rem;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  background: var(--bg2);
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.4s;
+  font-weight: 300;
+}
+.note-input:focus {
+  border-color: var(--warm);
+}
+.note-input::placeholder {
+  color: var(--muted);
+}
+
+.chat-input {
+  flex: 1;
+  padding: 0.55rem 0.875rem;
+  border-radius: 10px;
+  border: 1px solid var(--rule);
+  background: var(--bg3);
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.4s;
+  font-weight: 300;
+}
+.chat-input:focus {
+  border-color: var(--accent);
+}
