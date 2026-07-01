@@ -1,13 +1,55 @@
 /* ========== 响应式 ========== */
-@media (max-width: 900px) {
-  .dashboard {
+@media (max-width: 1024px) {
+  .approach-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .capabilities-grid {
     grid-template-columns: 1fr;
   }
-  .hero h1 {
-    font-size: 2.2rem;
+  .case-study-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .stories-grid {
+    grid-template-columns: 1fr;
+  }
+  .story-card-featured {
+    grid-row: span 1;
+  }
+  .footer-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .navbar-inner {
+    padding: 0;
   }
   .nav-links {
     display: none;
+  }
+  .nav-actions {
+    gap: 0.35rem;
+  }
+  .nav-action span:not(.location-dot) {
+    display: none;
+  }
+  .nav-action {
+    padding: 0.4rem;
+  }
+  .nav-action#location-btn {
+    padding: 0.4rem 0.7rem;
+  }
+  .nav-action#location-btn span:not(.location-dot) {
+    display: inline;
+  }
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+  .hero-stats {
+    gap: 1.5rem;
   }
   .demo-input-wrap {
     flex-direction: column;
@@ -21,16 +63,68 @@
 }
 
 @media (max-width: 600px) {
-  .hero h1 {
-    font-size: 1.8rem;
+  .navbar {
+    padding: 0 1rem;
+  }
+  .navbar-inner {
+    height: 64px;
+  }
+  .logo span {
+    display: none;
+  }
+  .hero {
+    padding: 7rem 1.25rem 2rem;
+  }
+  .hero-stats {
+    gap: 1rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .hero-stat-number {
+    font-size: 1.4rem;
+  }
+  .hero-stat-label {
+    font-size: 0.65rem;
   }
   .section {
-    padding: 3rem 1.25rem;
+    padding: 4rem 1.25rem;
   }
-  .features-grid {
+  .footer-inner {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
   .modal {
     padding: 1.25rem;
+  }
+  .map-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .map-tool-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.7rem;
+  }
+  .case-study-caption {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .case-study-stats {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .story-card,
+  .story-card-featured .story-content {
+    padding: 1.25rem;
+  }
+  .story-image {
+    height: 160px;
+  }
+  .api-key-wrap {
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+  }
+  .api-key-input {
+    width: 100%;
   }
 }

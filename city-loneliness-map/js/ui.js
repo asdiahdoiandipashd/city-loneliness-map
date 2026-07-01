@@ -47,6 +47,7 @@ function showToast(message, duration = 2500) {
 }
 
 export function initUI() {
+  initNavbarScroll();
   initTabs();
   initProfile();
   initDemo();
@@ -57,6 +58,16 @@ export function initUI() {
   initResetData();
   initApiKey();
   initSmoothScroll();
+}
+
+function initNavbarScroll() {
+  const navbar = document.getElementById('navbar');
+  if (!navbar) return;
+  const toggle = () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+  };
+  window.addEventListener('scroll', toggle, { passive: true });
+  toggle();
 }
 
 /* ========== 临时 DeepSeek API Key 配置 ========== */
@@ -567,7 +578,7 @@ function initNotes() {
     const notes = getDisplayNotes();
 
     if (notesContext) {
-      notesContext.style.display = selectedNotePOI ? 'flex' : 'none';
+      notesContext.classList.toggle('show', !!selectedNotePOI);
       if (notesContextName && selectedNotePOI) {
         notesContextName.textContent = selectedNotePOI.name;
       }

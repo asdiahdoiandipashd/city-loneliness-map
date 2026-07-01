@@ -14,87 +14,113 @@
   <canvas id="particle-canvas"></canvas>
 
   <!-- 导航栏 -->
-  <nav class="navbar">
+  <nav class="navbar" id="navbar">
     <div class="navbar-inner">
-      <div class="logo">
+      <a href="#" class="logo">
         <div class="logo-icon">&#x25c9;</div>
-        城市孤独地图
-      </div>
-      <button class="location-btn" id="location-btn">
-        <span class="location-dot"></span>
-        <span id="location-text">获取定位</span>
-      </button>
-      <button class="location-btn" id="reset-data-btn" title="重置体验数据" style="margin-left:0.5rem;">
-        <span>重置数据</span>
-      </button>
-      <div class="api-key-wrap" id="api-key-wrap" style="display:none;margin-left:0.5rem;">
-        <input type="password" id="api-key-input" class="api-key-input" placeholder="DeepSeek Key" style="padding:0.35rem 0.6rem;border-radius:6px;border:1px solid var(--glass-border);background:var(--bg3);color:var(--ink);font-size:0.75rem;width:140px;" />
-        <button id="api-key-save" class="location-btn" style="margin-left:0.35rem;padding:0.35rem 0.6rem;">保存</button>
-      </div>
-      <button class="location-btn" id="api-key-toggle" title="配置 DeepSeek API Key" style="margin-left:0.5rem;">
-        <span>配置 Key</span>
-      </button>
+        <span>城市孤独地图</span>
+      </a>
       <ul class="nav-links">
         <li><a href="#features">核心功能</a></li>
         <li><a href="#dashboard">情绪地图</a></li>
+        <li><a href="#cases">案例</a></li>
         <li><a href="#demo">AI 体验</a></li>
         <li><a href="#report" class="nav-cta">生成报告</a></li>
       </ul>
+      <div class="nav-actions">
+        <button class="nav-action" id="location-btn" title="定位">
+          <span class="location-dot"></span>
+          <span id="location-text">上海</span>
+        </button>
+        <button class="nav-action" id="reset-data-btn" title="重置体验数据">重置</button>
+        <button class="nav-action" id="api-key-toggle" title="配置 DeepSeek API Key">Key</button>
+      </div>
+      <div class="api-key-wrap" id="api-key-wrap" style="display:none;">
+        <input type="password" id="api-key-input" class="api-key-input" placeholder="DeepSeek Key" />
+        <button id="api-key-save" class="nav-action">保存</button>
+      </div>
     </div>
   </nav>
 
   <div class="page-content">
     <!-- Hero -->
-    <section class="hero">
+    <section class="hero" id="hero">
       <div class="hero-bg"></div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
-        <div class="hero-badge">Urban Emotion Observatory</div>
-        <h1>城市孤独地图</h1>
-        <p class="tagline">看见城市里那些沉默的情绪角落</p>
+        <div class="hero-kicker">Urban Emotion Observatory</div>
+        <h1 class="hero-title">
+          <span>看见城市里</span>
+          <span>那些沉默的情绪角落</span>
+        </h1>
         <p class="hero-desc">
-          这是一个基于 AI 的城市情绪观察与匿名表达平台。<br>
-          我们收集城市中的孤独瞬间，将分散的情绪转化为可视化地图，<br>
-          帮助每个人找到共鸣，并获得低压力的连接建议。
+          城市孤独地图是一个基于 AI 的城市情绪观察与匿名表达平台。我们收集城市中的孤独瞬间，将分散的情绪转化为可视化地图，帮助每个人找到共鸣，并获得低压力的连接建议。
         </p>
         <a href="#dashboard" class="hero-cta">
           <span>探索城市情绪地图</span>
-          <span>&#8595;</span>
+          <span class="hero-cta-arrow">&#8595;</span>
         </a>
       </div>
-      <div class="scroll-hint">
-        <span>向下滚动</span>
-        <span>&#8595;</span>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-number">12+</span>
+          <span class="hero-stat-label">情绪坐标</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-number">8</span>
+          <span class="hero-stat-label">孤独类型</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-number">3000+</span>
+          <span class="hero-stat-label">匿名留言</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-number">24h</span>
+          <span class="hero-stat-label">持续倾听</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Approach -->
+    <section class="section section-approach" id="approach">
+      <div class="approach-grid">
+        <div class="approach-lead">
+          <span class="section-kicker">Our Approach</span>
+          <h2>以人为尺度的<br>城市情绪观察</h2>
+        </div>
+        <div class="approach-body">
+          <p>我们相信，孤独不是个人的缺陷，而是现代城市空间设计中未被丈量的维度。每一条匿名标记、每一张小纸条，都是城市情绪肌理的一次采样。</p>
+          <p>通过 AI 对自然语言的理解，我们将散落的感受归类、定位、可视化，让原本不可见的情绪流动变得可阅读、可共鸣、可回应。</p>
+        </div>
       </div>
     </section>
 
     <!-- 核心功能 -->
     <section class="section" id="features">
-      <h2 class="section-title">核心功能</h2>
-      <p class="section-subtitle">用安静的方式，记录城市中被忽略的情绪流动</p>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">&#10022;</div>
+      <div class="section-header">
+        <span class="section-kicker">Capabilities</span>
+        <h2 class="section-title">核心能力</h2>
+        <p class="section-subtitle">用安静的方式，记录城市中被忽略的情绪流动</p>
+      </div>
+      <div class="capabilities-grid">
+        <div class="capability-card">
+          <div class="capability-number">01</div>
           <h3>匿名标记孤独地点</h3>
           <p>在地图上轻轻标记你感到孤独的地点，无需透露身份，只需留下情绪坐标。</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">&#9680;</div>
+        <div class="capability-card">
+          <div class="capability-number">02</div>
           <h3>AI 识别孤独类型</h3>
           <p>基于自然语言处理，AI 自动分析你的留言，识别孤独的情感类型与深度。</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">&#8270;</div>
+        <div class="capability-card">
+          <div class="capability-number">03</div>
           <h3>生成城市孤独热力图</h3>
           <p>聚合匿名数据，生成实时的城市孤独热力图，揭示城市情绪的空间分布。</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">&#9741;</div>
-          <h3>地点情绪档案</h3>
-          <p>每个地点拥有独立的情绪档案，包含孤独指数、常见情绪与匿名留言。</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">&#10023;</div>
+        <div class="capability-card">
+          <div class="capability-number">04</div>
           <h3>低压力连接建议</h3>
           <p>AI 根据你的孤独类型，推荐低压力的连接方式，从共鸣开始，不强迫社交。</p>
         </div>
@@ -102,23 +128,19 @@
     </section>
 
     <!-- 主界面：地图 + 档案 -->
-    <section class="section" id="dashboard">
-      <h2 class="section-title">城市情绪观测站</h2>
-      <p class="section-subtitle">点击地图上的微光，查看那片区域藏着的情绪</p>
+    <section class="section section-dashboard" id="dashboard">
+      <div class="section-header section-header-left">
+        <span class="section-kicker">Observation Deck</span>
+        <h2 class="section-title">城市情绪观测站</h2>
+        <p class="section-subtitle">点击地图上的微光，查看那片区域藏着的情绪</p>
+      </div>
       <div class="dashboard">
         <div class="map-panel">
-          <div class="map-header">
-            <h3>&#9733; 实时孤独热力图</h3>
-            <div class="live-indicator">
-              <span class="live-dot"></span>
-              <span>Live</span>
-            </div>
-          </div>
           <div class="map-toolbar">
-            <button class="map-tool-btn" id="locate-me-btn" title="定位到我">&#10022; 定位到我</button>
-            <button class="map-tool-btn" id="add-checkin-btn" title="标记此刻">&#43; 标记此刻</button>
-            <button class="map-tool-btn" id="toggle-shops-btn" title="显示附近门店">&#8962; 附近门店</button>
-            <button class="map-tool-btn" id="toggle-bus-btn" title="显示公交站牌">&#9733; 公交站牌</button>
+            <button class="map-tool-btn" id="locate-me-btn" title="定位到我">&#10022; 定位</button>
+            <button class="map-tool-btn" id="add-checkin-btn" title="标记此刻">&#43; 标记</button>
+            <button class="map-tool-btn" id="toggle-shops-btn" title="显示附近门店">&#8962; 门店</button>
+            <button class="map-tool-btn" id="toggle-bus-btn" title="显示公交站牌">&#9733; 公交</button>
           </div>
           <div class="map-container">
             <div id="leaflet-map" style="width: 100%; height: 100%;"></div>
@@ -128,7 +150,7 @@
         <div class="profile-panel">
           <div class="profile-header">
             <div class="profile-location" id="profile-name">末班地铁站</div>
-            <div class="profile-coords" id="profile-coords">31.2304°N, 121.4737°E · 第 127 次被标记</div>
+            <div class="profile-coords" id="profile-coords">31.2304°N, 121.4737°E · 上海市</div>
           </div>
 
           <div class="profile-tabs">
@@ -242,9 +264,9 @@
           </div>
 
           <div class="tab-content" id="tab-notes">
-            <div class="notes-context" id="notes-context" style="display:none;padding:0.75rem 1rem;border-bottom:1px solid var(--rule);font-size:0.8rem;color:var(--muted);">
-              正在查看 <strong id="notes-context-name" style="color:var(--ink);"></strong> 附近的小纸条
-              <button id="notes-context-clear" style="margin-left:auto;background:transparent;border:none;color:var(--accent);font-size:0.75rem;cursor:pointer;">清除位置</button>
+            <div class="notes-context" id="notes-context">
+              正在查看 <strong id="notes-context-name"></strong> 附近的小纸条
+              <button id="notes-context-clear">清除位置</button>
             </div>
             <div class="notes-wall" id="notes-wall"></div>
             <div class="note-input-area">
@@ -252,17 +274,108 @@
                 <input type="text" class="note-input" id="note-input" placeholder="在当前位置留下一张小纸条..." />
                 <button class="note-submit" id="note-submit">留下纸条</button>
               </div>
-              <div id="note-input-context" style="font-size:0.7rem;color:var(--muted);margin-top:0.35rem;padding-left:0.25rem;"></div>
+              <div id="note-input-context"></div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- 案例研究 -->
+    <section class="section section-cases" id="cases">
+      <div class="section-header section-header-left">
+        <span class="section-kicker">Case Study</span>
+        <h2 class="section-title">一个情绪地点的深度观察</h2>
+        <p class="section-subtitle">末班地铁站：城市孤独的高频坐标，每晚承载数百个沉默的转折</p>
+      </div>
+      <div class="case-study-grid">
+        <div class="case-study-media">
+          <img src="./assets/city_night_aerial_1280x720.jpg" alt="城市夜景航拍" loading="lazy">
+          <div class="case-study-caption">
+            <span>上海 · 末班地铁站周边</span>
+            <span>22:00 - 01:00 情绪活跃时段</span>
+          </div>
+        </div>
+        <div class="case-study-body">
+          <div class="case-study-lead">
+            <p>末班地铁站不是终点，而是城市情绪的集散地。当最后一班列车驶离，站台上的人们被迫面对一天中第一次完整的独处。</p>
+          </div>
+          <div class="case-study-stats">
+            <div class="case-study-stat">
+              <span class="case-study-number">87<span>/100</span></span>
+              <span class="case-study-label">平均孤独指数</span>
+            </div>
+            <div class="case-study-stat">
+              <span class="case-study-number">34%</span>
+              <span class="case-study-label">归属感缺失</span>
+            </div>
+            <div class="case-study-stat">
+              <span class="case-study-number">28%</span>
+              <span class="case-study-label">时间焦虑</span>
+            </div>
+          </div>
+          <div class="case-study-insight">
+            <h4>AI 观察结论</h4>
+            <p>该地点的情绪表达集中在「转移」与「等待」之间：人们并非厌恶地铁，而是恐惧从公共空间退回私人空间时，那种尚未整理好的自我。建议在此类空间设置低压力的「情绪缓冲提示」，例如匿名小纸条或轻柔的环境音。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 最新情绪动态 -->
+    <section class="section section-stories" id="stories">
+      <div class="section-header section-header-left">
+        <span class="section-kicker">Community Stories</span>
+        <h2 class="section-title">最新情绪动态</h2>
+        <p class="section-subtitle">来自城市各个角落的匿名瞬间，彼此不相识，却共享同一种情绪</p>
+      </div>
+      <div class="stories-grid">
+        <article class="story-card story-card-featured">
+          <div class="story-image">
+            <img src="./assets/calm_map_mist_1280x720.jpg" alt="薄雾中的城市地图" loading="lazy">
+          </div>
+          <div class="story-content">
+            <span class="story-tag">精选地点</span>
+            <h3>便利店门口的塑料凳</h3>
+            <p>凌晨两点的便利店，有人坐着吃完一份关东煮，却没有回家。这里成为临时庇护所，温暖的食物和24小时不熄的灯，让孤独变得可以忍受。</p>
+            <div class="story-meta">
+              <span>上海 · 静安</span>
+              <span>12 张小纸条</span>
+            </div>
+          </div>
+        </article>
+        <article class="story-card">
+          <div class="story-content">
+            <span class="story-tag">匿名留言</span>
+            <h3>天台的风知道</h3>
+            <p>"每次加班到很晚，我都会来公司天台站十分钟。没有人问我为什么，风也不会问。"</p>
+            <div class="story-meta">
+              <span>杭州 · 滨江</span>
+              <span>3小时前</span>
+            </div>
+          </div>
+        </article>
+        <article class="story-card">
+          <div class="story-content">
+            <span class="story-tag">匿名留言</span>
+            <h3>公交站台的二十分钟</h3>
+            <p>"末班车要等二十分钟，我发现自己竟然有点期待。因为只有在等车的这段时间，我什么都不用做。"</p>
+            <div class="story-meta">
+              <span>广州 · 天河</span>
+              <span>5小时前</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <!-- AI 交互演示 -->
-    <section class="section" id="demo">
-      <h2 class="section-title">AI 情绪分析体验</h2>
-      <p class="section-subtitle">写下那一刻的感受，让 AI 用安静的方式回应你</p>
+    <section class="section section-demo" id="demo">
+      <div class="section-header">
+        <span class="section-kicker">AI Experience</span>
+        <h2 class="section-title">AI 情绪分析体验</h2>
+        <p class="section-subtitle">写下那一刻的感受，让 AI 用安静的方式回应你</p>
+      </div>
       <div class="demo-section">
         <div class="demo-input-area">
           <label>分享一个让你感到孤独的瞬间：</label>
@@ -291,27 +404,38 @@
 
     <!-- CTA -->
     <section class="cta-section" id="report">
-      <h2>生成我的城市孤独报告</h2>
-      <p>基于你的标记记录与情绪数据，AI 将为你生成一份专属的城市孤独报告，像一本安静的日记。</p>
-      <button class="cta-btn" id="cta-btn">
-        <span>&#9670;</span>
-        <span>生成我的城市孤独报告</span>
-      </button>
+      <div class="cta-inner">
+        <span class="section-kicker">Your Report</span>
+        <h2>生成我的城市孤独报告</h2>
+        <p>基于你的标记记录与情绪数据，AI 将为你生成一份专属的城市孤独报告，像一本安静的日记。</p>
+        <button class="cta-btn" id="cta-btn">
+          <span>&#9670;</span>
+          <span>生成我的城市孤独报告</span>
+        </button>
+      </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-      <p class="disclaimer">
-        <strong>声明：</strong>城市孤独地图是一个城市情绪观察与匿名表达平台，并非心理治疗软件或医疗机构。<br>
-        如果你正在经历严重的心理困扰，请寻求专业心理咨询师或医生的帮助。
-      </p>
-      <div class="footer-links">
-        <a href="#">关于我们</a>
-        <a href="#">隐私政策</a>
-        <a href="#">使用条款</a>
-        <a href="#">联系反馈</a>
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="logo">
+            <div class="logo-icon">&#x25c9;</div>
+            <span>城市孤独地图</span>
+          </div>
+          <p>一个关于城市、情绪与共情的安静实验。</p>
+        </div>
+        <div class="footer-disclaimer">
+          <p><strong>声明：</strong>城市孤独地图是一个城市情绪观察与匿名表达平台，并非心理治疗软件或医疗机构。如果你正在经历严重的心理困扰，请寻求专业心理咨询师或医生的帮助。</p>
+        </div>
+        <div class="footer-links">
+          <a href="#">关于我们</a>
+          <a href="#">隐私政策</a>
+          <a href="#">使用条款</a>
+          <a href="#">联系反馈</a>
+        </div>
       </div>
-      <p>&#8270; 城市孤独地图 City Loneliness Map &#8270;</p>
+      <p class="footer-credit">&#8270; 城市孤独地图 City Loneliness Map &#8270;</p>
     </footer>
   </div>
 
