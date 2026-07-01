@@ -46,6 +46,12 @@ export function initMap() {
     locateBtn.addEventListener('click', locateUser);
   }
 
+  // 绑定导航栏定位按钮
+  const navLocateBtn = document.getElementById('location-btn');
+  if (navLocateBtn) {
+    navLocateBtn.addEventListener('click', locateUser);
+  }
+
   const addBtn = document.getElementById('add-checkin-btn');
   if (addBtn) {
     addBtn.addEventListener('click', () => {
