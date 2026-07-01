@@ -1,10 +1,12 @@
 import { analyzeEmotion } from './emotionAI.js';
 import { CONFIG } from './config.js';
-import { getNotes, addNote, seedNotesIfEmpty, getCheckins, addCheckin, getCityByCoords, resetData, EMOTION_TYPES } from './data.js';
-import { onSelectCheckin, onAddCheckinRequest, getCurrentPosition, refreshMarkers, selectCheckin, getNearbyCheckins } from './map.js';
+import { getNotes, addNote, addReply, seedNotesIfEmpty, getCheckins, addCheckin, getCityByCoords, getDistance, resetData, EMOTION_TYPES } from './data.js';
+import { onSelectCheckin, onAddCheckinRequest, onSelectPOI, getCurrentPosition, refreshMarkers, selectCheckin, getNearbyCheckins } from './map.js';
 
 let currentCheckin = null;
 let checkinDraft = null;
+let selectedNotePOI = null;
+let renderNotesGlobal = null;
 
 /* 轻提示 */
 function showToast(message, duration = 2500) {
@@ -50,6 +52,7 @@ export function initUI() {
   initDemo();
   initChat();
   initNotes();
+  initPOINotes();
   initCheckinForm();
   initResetData();
   initApiKey();
@@ -540,22 +543,93 @@ function initNotes() {
   const noteInput = document.getElementById('note-input');
   const noteSubmit = document.getElementById('note-submit');
   const notesWall = document.getElementById('notes-wall');
+  const notesContext = document.getElementById('notes-context');
+  const notesContextName = document.getElementById('notes-context-name');
+  const notesContextClear = document.getElementById('notes-context-clear');
+  const noteInputContext = document.getElementById('note-input-context');
 
   if (!notesWall) return;
 
   seedNotesIfEmpty();
 
-  function renderNotes() {
-    const notes = getNotes();
-    notesWall.innerHTML = notes.map(note => `
-      <div class="note-card">
-        <div class="note-text">"${note.text}"</div>
-        <div class="note-meta">${note.meta}</div>
-      </div>
-    `).join('');
+  function getDisplayNotes() {
+    if (selectedNotePOI) {
+      return getNotes().filter(n => n.poiId === selectedNotePOI.id ||
+        (n.lat != null && getDistance(selectedNotePOI.lat, selectedNotePOI.lng, n.lat, n.lng) <= 0.3));
+    }
+    const pos = getCurrentPosition();
+    return getNotes().filter(n => n.lat == null || getDistance(pos.lat, pos.lng, n.lat, n.lng) <= 1.5);
   }
 
-  renderNotes();
+  renderNotesGlobal = renderNotes;
+
+  function renderNotes() {
+    const notes = getDisplayNotes();
+
+    if (notesContext) {
+      notesContext.style.display = selectedNotePOI ? 'flex' : 'none';
+      if (notesContextName && selectedNotePOI) {
+        notesContextName.textContent = selectedNotePOI.name;
+      }
+    }
+
+    if (noteInputContext) {
+      noteInputContext.textContent = selectedNotePOI
+        ? `纸条将留在「${selectedNotePOI.name}」附近`
+        : '纸条将留在你当前位置附近';
+    }
+
+    if (!notes.length) {
+      notesWall.innerHTML = `<div class="notes-empty" style="text-align:center;color:var(--muted);font-size:0.8rem;padding:2rem 0;">这里还没有小纸条，做第一个留下痕迹的人吧。</div>`;
+      return;
+    }
+
+    notesWall.innerHTML = notes.map(note => `
+      <div class="note-card" data-note-id="${note.id}">
+        <div class="note-text">"${note.text}"</div>
+        <div class="note-meta">
+          ${note.meta}
+          ${note.poiName ? ` · ${note.poiName}` : ''}
+        </div>
+        ${note.replies && note.replies.length ? `
+          <div class="note-replies">
+            ${note.replies.map(reply => `
+              <div class="note-reply">
+                <div class="note-reply-text">${reply.text}</div>
+                <div class="note-reply-meta">${reply.meta}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+        <div class="note-reply-form">
+          <input type="text" class="note-reply-input" placeholder="回复这张纸条..." />
+          <button class="note-reply-submit">回复</button>
+        </div>
+      </div>
+    `).join('');
+
+    bindReplyForms();
+  }
+
+  function bindReplyForms() {
+    notesWall.querySelectorAll('.note-card').forEach(card => {
+      const noteId = card.dataset.noteId;
+      const input = card.querySelector('.note-reply-input');
+      const submit = card.querySelector('.note-reply-submit');
+      if (!input || !submit) return;
+
+      submit.addEventListener('click', () => {
+        const text = input.value.trim();
+        if (!text) return;
+        addReply(noteId, text);
+        renderNotes();
+      });
+
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') submit.click();
+      });
+    });
+  }
 
   if (noteSubmit) {
     noteSubmit.addEventListener('click', () => {
@@ -566,7 +640,20 @@ function initNotes() {
         return;
       }
 
-      addNote(text);
+      const options = { lat: null, lng: null, poiId: null, poiName: null, poiCategory: null };
+      if (selectedNotePOI) {
+        options.lat = selectedNotePOI.lat;
+        options.lng = selectedNotePOI.lng;
+        options.poiId = selectedNotePOI.id;
+        options.poiName = selectedNotePOI.name;
+        options.poiCategory = selectedNotePOI.category;
+      } else {
+        const pos = getCurrentPosition();
+        options.lat = pos.lat;
+        options.lng = pos.lng;
+      }
+
+      addNote(text, options);
       renderNotes();
       noteInput.value = '';
     });
@@ -577,6 +664,29 @@ function initNotes() {
       if (e.key === 'Enter') noteSubmit.click();
     });
   }
+
+  if (notesContextClear) {
+    notesContextClear.addEventListener('click', () => {
+      selectedNotePOI = null;
+      renderNotes();
+    });
+  }
+
+  renderNotes();
+}
+
+/* ========== 地图 POI 与小纸条联动 ========== */
+function initPOINotes() {
+  onSelectPOI((poi) => {
+    selectedNotePOI = poi;
+    // 切换到小纸条标签页
+    const notesTab = document.querySelector('.profile-tab[data-tab="notes"]');
+    if (notesTab) notesTab.click();
+    // 重新渲染小纸条
+    if (typeof renderNotesGlobal === 'function') {
+      renderNotesGlobal();
+    }
+  });
 }
 
 /* ========== 平滑滚动 ========== */

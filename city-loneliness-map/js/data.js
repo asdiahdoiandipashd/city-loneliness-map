@@ -65,10 +65,48 @@ export const EMOTION_TYPES = {
 };
 
 const seedNotes = [
-  { text: '如果你也在这个地铁站感到孤独，请记住：这座城市里至少有 127 个人和你一样。', meta: '2026.06.28 · 匿名' },
-  { text: '我在长椅第三根木条的缝隙里藏了一颗糖，找到它的人，今天会甜一点。', meta: '2026.06.27 · 匿名' },
-  { text: '不要难过，末班车之后还有出租车，出租车之后还有走路回家的勇气。', meta: '2026.06.26 · 匿名' },
-  { text: '如果你看到这个纸条，说明我们曾在同一时间出现在同一空间，这算不算是另一种相遇？', meta: '2026.06.25 · 匿名' }
+  {
+    id: 'note_seed_1',
+    text: '如果你也在这个地铁站感到孤独，请记住：这座城市里至少有 127 个人和你一样。',
+    meta: '2026.06.28 · 匿名',
+    lat: 31.2304,
+    lng: 121.4737,
+    poiName: '人民广场地铁站',
+    poiCategory: '公交站牌',
+    replies: []
+  },
+  {
+    id: 'note_seed_2',
+    text: '我在长椅第三根木条的缝隙里藏了一颗糖，找到它的人，今天会甜一点。',
+    meta: '2026.06.27 · 匿名',
+    lat: 31.2324,
+    lng: 121.4757,
+    poiName: '南京东路步行街',
+    poiCategory: '门店',
+    replies: [
+      { id: 'reply_seed_1', text: '我找到了，真的很甜，谢谢你。', meta: '2026.06.27 · 匿名' }
+    ]
+  },
+  {
+    id: 'note_seed_3',
+    text: '不要难过，末班车之后还有出租车，出租车之后还有走路回家的勇气。',
+    meta: '2026.06.26 · 匿名',
+    lat: 31.2284,
+    lng: 121.4717,
+    poiName: '淮海中路公交站',
+    poiCategory: '公交站牌',
+    replies: []
+  },
+  {
+    id: 'note_seed_4',
+    text: '如果你看到这个纸条，说明我们曾在同一时间出现在同一空间，这算不算是另一种相遇？',
+    meta: '2026.06.25 · 匿名',
+    lat: 31.2344,
+    lng: 121.4697,
+    poiName: '静安寺商圈',
+    poiCategory: '门店',
+    replies: []
+  }
 ];
 
 // 种子数据：覆盖多个城市的情绪标记
@@ -368,14 +406,27 @@ export function getUserProfile() {
   return updateUserProfile();
 }
 
+function migrateNote(note, idx) {
+  if (!note.id) {
+    note.id = `note_migrated_${idx}_${Date.now()}`;
+  }
+  if (!Array.isArray(note.replies)) {
+    note.replies = [];
+  }
+  return note;
+}
+
 export function getNotes() {
   try {
     const stored = storageGet(NOTES_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) {
+      const notes = JSON.parse(stored);
+      return notes.map(migrateNote);
+    }
   } catch (e) {
     console.warn('读取本地纸条失败', e);
   }
-  return [...seedNotes];
+  return seedNotes.map(n => ({ ...n }));
 }
 
 export function saveNotes(notes) {
@@ -386,12 +437,49 @@ export function saveNotes(notes) {
   }
 }
 
-export function addNote(text) {
+export function addNote(text, options = {}) {
   const notes = getNotes();
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
-  notes.unshift({ text, meta: `${today} · 匿名` });
+  const newNote = {
+    id: `note_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    text,
+    meta: `${today} · 匿名`,
+    lat: options.lat,
+    lng: options.lng,
+    poiId: options.poiId || null,
+    poiName: options.poiName || null,
+    poiCategory: options.poiCategory || null,
+    replies: []
+  };
+  notes.unshift(newNote);
   saveNotes(notes);
-  return notes;
+  return newNote;
+}
+
+export function addReply(noteId, text) {
+  const notes = getNotes();
+  const note = notes.find(n => n.id === noteId);
+  if (!note) return null;
+
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+  const reply = {
+    id: `reply_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    text,
+    meta: `${today} · 匿名`
+  };
+  if (!Array.isArray(note.replies)) note.replies = [];
+  note.replies.push(reply);
+  saveNotes(notes);
+  return reply;
+}
+
+export function getNotesNear(lat, lng, radiusKm = 1) {
+  const notes = getNotes();
+  return notes
+    .filter(n => n.lat != null && n.lng != null)
+    .map(n => ({ ...n, distance: getDistance(lat, lng, n.lat, n.lng) }))
+    .filter(n => n.distance <= radiusKm)
+    .sort((a, b) => a.distance - b.distance);
 }
 
 export function seedNotesIfEmpty() {

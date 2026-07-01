@@ -302,6 +302,11 @@
   background: rgba(122, 156, 198, 0.08);
   border-color: var(--accent);
 }
+.map-tool-btn.active {
+  background: rgba(122, 156, 198, 0.15);
+  border-color: var(--accent);
+  color: var(--ink);
+}
 .map-container {
   position: relative;
   width: 100%;
@@ -346,6 +351,62 @@
 }
 .emotion-marker:hover .emotion-marker-inner {
   transform: scale(1.25);
+}
+
+/* POI 标记（门店 / 公交站牌） */
+.poi-marker {
+  background: transparent !important;
+  border: none !important;
+}
+.poi-marker-inner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0d1117;
+  font-size: 0.7rem;
+  border: 1.5px solid rgba(216, 221, 228, 0.35);
+  transition: transform 0.3s ease;
+}
+.poi-marker:hover .poi-marker-inner {
+  transform: scale(1.2);
+}
+
+/* 当前位置标记 */
+.current-location-marker {
+  background: transparent !important;
+  border: none !important;
+}
+.current-location-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #7a9cc6;
+  border: 2px solid #d8dde4;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  box-shadow: 0 0 10px rgba(122, 156, 198, 0.8);
+}
+.current-location-pulse {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(122, 156, 198, 0.35);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  animation: location-pulse 1.8s ease-out infinite;
+}
+@keyframes location-pulse {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
 }
 
 /* 档案面板 */
@@ -584,6 +645,68 @@
 .note-input-wrap {
   display: flex;
   gap: 0.4rem;
+}
+.notes-context {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.note-card {
+  background: rgba(122, 156, 198, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+.note-replies {
+  margin-top: 0.6rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid rgba(122, 156, 198, 0.2);
+}
+.note-reply {
+  margin-bottom: 0.5rem;
+}
+.note-reply-text {
+  font-size: 0.72rem;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.note-reply-meta {
+  font-size: 0.6rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
+  font-family: 'GeistMono', monospace;
+}
+.note-reply-form {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+.note-reply-input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  color: var(--ink);
+  font-size: 0.75rem;
+  outline: none;
+}
+.note-reply-input:focus {
+  border-color: var(--accent);
+}
+.note-reply-submit {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.note-reply-submit:hover {
+  border-color: var(--accent);
+  background: rgba(122, 156, 198, 0.08);
 }
 
 /* ========== AI 交互演示区 ========== */

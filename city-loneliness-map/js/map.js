@@ -1,10 +1,18 @@
 import { getCheckins, addCheckin, getCityByCoords, getDistance, seedCheckinsIfEmpty } from './data.js';
+import { fetchNearbyPOIs } from './overpass.js';
 
 let map = null;
 let markersLayer = null;
+let currentPositionLayer = null;
+let shopsLayer = null;
+let busStopsLayer = null;
 let currentPosition = { lat: 31.2304, lng: 121.4737, city: '上海市' };
 let onSelectCheckinCallback = null;
 let onAddCheckinRequestCallback = null;
+let onSelectPOICallback = null;
+let showShops = false;
+let showBusStops = false;
+let lastPOIs = { shops: [], busStops: [] };
 
 const DEFAULT_CENTER = { lat: 31.2304, lng: 121.4737 };
 
@@ -30,8 +38,12 @@ export function initMap() {
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
   markersLayer = L.layerGroup().addTo(map);
+  currentPositionLayer = L.layerGroup().addTo(map);
+  shopsLayer = L.layerGroup().addTo(map);
+  busStopsLayer = L.layerGroup().addTo(map);
 
   renderMarkers();
+  renderCurrentPositionMarker();
 
   // 地图点击：用于标记此刻（长按或点击空白处）
   map.on('click', (e) => {
@@ -57,6 +69,32 @@ export function initMap() {
     addBtn.addEventListener('click', () => {
       if (onAddCheckinRequestCallback) {
         onAddCheckinRequestCallback(currentPosition.lat, currentPosition.lng);
+      }
+    });
+  }
+
+  const toggleShopsBtn = document.getElementById('toggle-shops-btn');
+  if (toggleShopsBtn) {
+    toggleShopsBtn.addEventListener('click', () => {
+      showShops = !showShops;
+      toggleShopsBtn.classList.toggle('active', showShops);
+      if (showShops) {
+        loadAndRenderPOIs();
+      } else {
+        shopsLayer.clearLayers();
+      }
+    });
+  }
+
+  const toggleBusBtn = document.getElementById('toggle-bus-btn');
+  if (toggleBusBtn) {
+    toggleBusBtn.addEventListener('click', () => {
+      showBusStops = !showBusStops;
+      toggleBusBtn.classList.toggle('active', showBusStops);
+      if (showBusStops) {
+        loadAndRenderPOIs();
+      } else {
+        busStopsLayer.clearLayers();
       }
     });
   }
@@ -90,6 +128,10 @@ export function locateUser() {
         locateBtn.disabled = false;
       }
       updateLocationButtonUI(currentPosition.city);
+      renderCurrentPositionMarker();
+      if (showShops || showBusStops) {
+        loadAndRenderPOIs();
+      }
     },
     (error) => {
       console.warn('定位失败', error);
@@ -108,6 +150,7 @@ function fallbackToDefault(message) {
     locateBtn.disabled = false;
   }
   updateLocationButtonUI('上海市', message || '定位失败，已切换默认城市');
+  renderCurrentPositionMarker();
 }
 
 function showLocationToast(message) {
@@ -136,6 +179,30 @@ function updateLocationButtonUI(city, toastMessage) {
   if (toastMessage) showLocationToast(toastMessage);
 }
 
+function createCurrentLocationIcon() {
+  return L.divIcon({
+    className: 'current-location-marker',
+    html: `
+      <div class="current-location-dot"></div>
+      <div class="current-location-pulse"></div>
+    `,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
+  });
+}
+
+function renderCurrentPositionMarker() {
+  if (!map || !currentPositionLayer) return;
+  currentPositionLayer.clearLayers();
+
+  const marker = L.marker([currentPosition.lat, currentPosition.lng], {
+    icon: createCurrentLocationIcon(),
+    zIndexOffset: 1000
+  });
+  marker.bindPopup('<div style="font-family:\'Outfit\',sans-serif;font-size:0.75rem;">你在这里</div>', { closeButton: false, className: 'poi-popup' });
+  currentPositionLayer.addLayer(marker);
+}
+
 function createMarkerIcon(score) {
   const size = Math.max(18, Math.min(36, 14 + score / 5));
   const opacity = 0.7 + score / 330;
@@ -144,6 +211,24 @@ function createMarkerIcon(score) {
     html: `<div class="emotion-marker-inner" style="width:${size}px;height:${size}px;opacity:${opacity};"></div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2]
+  });
+}
+
+function createShopIcon() {
+  return L.divIcon({
+    className: 'poi-marker shop-marker',
+    html: `<div class="poi-marker-inner" style="background:#c4a77d;box-shadow:0 0 8px rgba(196,167,125,0.5);">&#8962;</div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11]
+  });
+}
+
+function createBusStopIcon() {
+  return L.divIcon({
+    className: 'poi-marker bus-marker',
+    html: `<div class="poi-marker-inner" style="background:#7fb89f;box-shadow:0 0 8px rgba(127,184,159,0.5);">&#9733;</div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11]
   });
 }
 
@@ -171,6 +256,48 @@ export function renderMarkers() {
   });
 }
 
+async function loadAndRenderPOIs() {
+  if (!map) return;
+  const pois = await fetchNearbyPOIs(currentPosition.lat, currentPosition.lng, 600);
+  lastPOIs = pois;
+  renderPOIs();
+}
+
+function renderPOIs() {
+  if (!map) return;
+
+  shopsLayer.clearLayers();
+  busStopsLayer.clearLayers();
+
+  if (showShops) {
+    lastPOIs.shops.forEach(poi => {
+      const marker = L.marker([poi.lat, poi.lng], { icon: createShopIcon() });
+      marker.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        if (onSelectPOICallback) {
+          onSelectPOICallback(poi);
+        }
+      });
+      marker.bindPopup(`<div style="font-family:'Outfit',sans-serif;font-size:0.8rem;"><strong>${poi.name}</strong><br><span style="color:var(--muted);font-size:0.7rem;">${poi.category}</span></div>`, { closeButton: false, className: 'poi-popup' });
+      shopsLayer.addLayer(marker);
+    });
+  }
+
+  if (showBusStops) {
+    lastPOIs.busStops.forEach(poi => {
+      const marker = L.marker([poi.lat, poi.lng], { icon: createBusStopIcon() });
+      marker.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        if (onSelectPOICallback) {
+          onSelectPOICallback(poi);
+        }
+      });
+      marker.bindPopup(`<div style="font-family:'Outfit',sans-serif;font-size:0.8rem;"><strong>${poi.name}</strong><br><span style="color:var(--muted);font-size:0.7rem;">公交站牌</span></div>`, { closeButton: false, className: 'poi-popup' });
+      busStopsLayer.addLayer(marker);
+    });
+  }
+}
+
 export function selectCheckin(checkin) {
   if (onSelectCheckinCallback) {
     onSelectCheckinCallback(checkin);
@@ -186,6 +313,10 @@ export function onSelectCheckin(callback) {
 
 export function onAddCheckinRequest(callback) {
   onAddCheckinRequestCallback = callback;
+}
+
+export function onSelectPOI(callback) {
+  onSelectPOICallback = callback;
 }
 
 export function getCurrentPosition() {
