@@ -7,14 +7,23 @@ let currentPositionLayer = null;
 let shopsLayer = null;
 let busStopsLayer = null;
 let currentPosition = { lat: 31.2304, lng: 121.4737, city: '上海市' };
+let hasUserLocation = false;
 let onSelectCheckinCallback = null;
 let onAddCheckinRequestCallback = null;
 let onSelectPOICallback = null;
 let showShops = false;
 let showBusStops = false;
+let isMarkMode = false;
 let lastPOIs = { shops: [], busStops: [] };
 
 const DEFAULT_CENTER = { lat: 31.2304, lng: 121.4737 };
+const FALLBACK_TILE = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="#0a1719"/>
+    <path d="M0 64H256M0 128H256M0 192H256M64 0V256M128 0V256M192 0V256" stroke="#173034" stroke-width="1"/>
+    <path d="M0 0L256 256M256 0L0 256" stroke="#12272a" stroke-width="1"/>
+  </svg>
+`)}`;
 
 export function initMap() {
   seedCheckinsIfEmpty();
@@ -32,7 +41,8 @@ export function initMap() {
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
-    maxZoom: 19
+    maxZoom: 19,
+    errorTileUrl: FALLBACK_TILE
   }).addTo(map);
 
   L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -43,12 +53,15 @@ export function initMap() {
   busStopsLayer = L.layerGroup().addTo(map);
 
   renderMarkers();
-  renderCurrentPositionMarker();
+  updateLocationButtonUI('上海样例');
 
-  // 地图点击：用于标记此刻（长按或点击空白处）
+  // 地图默认只用于浏览；用户主动开启标记模式后，点击空白处才会创建坐标。
   map.on('click', (e) => {
-    if (onAddCheckinRequestCallback) {
+    if (isMarkMode && onAddCheckinRequestCallback) {
+      setMarkMode(false);
       onAddCheckinRequestCallback(e.latlng.lat, e.latlng.lng);
+    } else {
+      setMapHint('点击微光查看情绪档案；需要发布时请先开启「标记此刻」');
     }
   });
 
@@ -67,9 +80,7 @@ export function initMap() {
   const addBtn = document.getElementById('add-checkin-btn');
   if (addBtn) {
     addBtn.addEventListener('click', () => {
-      if (onAddCheckinRequestCallback) {
-        onAddCheckinRequestCallback(currentPosition.lat, currentPosition.lng);
-      }
+      setMarkMode(!isMarkMode);
     });
   }
 
@@ -78,6 +89,7 @@ export function initMap() {
     toggleShopsBtn.addEventListener('click', () => {
       showShops = !showShops;
       toggleShopsBtn.classList.toggle('active', showShops);
+      toggleShopsBtn.setAttribute('aria-pressed', String(showShops));
       if (showShops) {
         loadAndRenderPOIs();
       } else {
@@ -91,6 +103,7 @@ export function initMap() {
     toggleBusBtn.addEventListener('click', () => {
       showBusStops = !showBusStops;
       toggleBusBtn.classList.toggle('active', showBusStops);
+      toggleBusBtn.setAttribute('aria-pressed', String(showBusStops));
       if (showBusStops) {
         loadAndRenderPOIs();
       } else {
@@ -99,8 +112,40 @@ export function initMap() {
     });
   }
 
-  // 优先定位用户
-  locateUser();
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isMarkMode) {
+      setMarkMode(false);
+    }
+  });
+}
+
+function setMapHint(message, reset = true) {
+  const hint = document.getElementById('map-mode-hint');
+  if (!hint) return;
+  hint.textContent = message;
+  if (!reset) return;
+  window.clearTimeout(setMapHint.timer);
+  setMapHint.timer = window.setTimeout(() => {
+    hint.textContent = isMarkMode ? '标记模式：点击地图选择坐标，按 Esc 取消' : '点击微光查看情绪档案';
+  }, 2600);
+}
+
+function setMarkMode(active) {
+  isMarkMode = Boolean(active);
+  const addBtn = document.getElementById('add-checkin-btn');
+  const mapPanel = document.querySelector('.map-panel');
+  const mapElement = document.getElementById('leaflet-map');
+
+  addBtn?.classList.toggle('active', isMarkMode);
+  addBtn?.setAttribute('aria-pressed', String(isMarkMode));
+  if (addBtn) {
+    addBtn.innerHTML = isMarkMode
+      ? '<span aria-hidden="true">×</span> 取消标记'
+      : '<span aria-hidden="true">＋</span> 标记此刻';
+  }
+  mapPanel?.classList.toggle('is-mark-mode', isMarkMode);
+  mapElement?.classList.toggle('mark-mode', isMarkMode);
+  setMapHint(isMarkMode ? '标记模式：点击地图选择坐标，按 Esc 取消' : '点击微光查看情绪档案', false);
 }
 
 export function locateUser() {
@@ -117,6 +162,7 @@ export function locateUser() {
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
+      hasUserLocation = true;
       currentPosition = {
         lat: position.coords.latitude,
         lng: position.coords.longitude,
@@ -142,6 +188,7 @@ export function locateUser() {
 }
 
 function fallbackToDefault(message) {
+  hasUserLocation = false;
   currentPosition = { ...DEFAULT_CENTER, city: '上海市' };
   updateMapCenter(currentPosition.lat, currentPosition.lng, currentPosition.city);
   const locateBtn = document.getElementById('locate-me-btn');
@@ -149,8 +196,8 @@ function fallbackToDefault(message) {
     locateBtn.textContent = '定位到我';
     locateBtn.disabled = false;
   }
-  updateLocationButtonUI('上海市', message || '定位失败，已切换默认城市');
-  renderCurrentPositionMarker();
+  updateLocationButtonUI('上海样例', message || '定位失败，继续使用上海演示样例');
+  currentPositionLayer?.clearLayers();
 }
 
 function showLocationToast(message) {
@@ -194,6 +241,7 @@ function createCurrentLocationIcon() {
 function renderCurrentPositionMarker() {
   if (!map || !currentPositionLayer) return;
   currentPositionLayer.clearLayers();
+  if (!hasUserLocation) return;
 
   const marker = L.marker([currentPosition.lat, currentPosition.lng], {
     icon: createCurrentLocationIcon(),
@@ -238,16 +286,22 @@ export function renderMarkers() {
 
   const checkins = getCheckins();
   checkins.forEach(checkin => {
-    const marker = L.marker([checkin.lat, checkin.lng], { icon: createMarkerIcon(checkin.score) });
+    const marker = L.marker([checkin.lat, checkin.lng], {
+      icon: createMarkerIcon(checkin.score),
+      title: `${checkin.name}，自报情绪强度 ${checkin.score}`,
+      alt: `${checkin.name}情绪坐标`,
+      keyboard: true
+    });
     marker.on('click', (e) => {
       L.DomEvent.stopPropagation(e);
+      setMarkMode(false);
       selectCheckin(checkin);
     });
 
     const popupContent = `
       <div style="font-family: 'Outfit', sans-serif; min-width: 140px;">
         <div style="font-size: 0.85rem; font-weight: 500; color: var(--ink); margin-bottom: 0.25rem;">${checkin.name}</div>
-        <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 0.5rem;">${checkin.city} · 孤独指数 ${checkin.score}</div>
+        <div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 0.5rem;">${checkin.city} · 自报强度 ${checkin.score}</div>
         <div style="font-size: 0.75rem; color: var(--ink); line-height: 1.5;">${checkin.text || checkin.tags.slice(0, 2).join(' · ')}</div>
       </div>
     `;
@@ -274,6 +328,7 @@ function renderPOIs() {
       const marker = L.marker([poi.lat, poi.lng], { icon: createShopIcon() });
       marker.on('click', (e) => {
         L.DomEvent.stopPropagation(e);
+        setMarkMode(false);
         if (onSelectPOICallback) {
           onSelectPOICallback(poi);
         }
@@ -288,6 +343,7 @@ function renderPOIs() {
       const marker = L.marker([poi.lat, poi.lng], { icon: createBusStopIcon() });
       marker.on('click', (e) => {
         L.DomEvent.stopPropagation(e);
+        setMarkMode(false);
         if (onSelectPOICallback) {
           onSelectPOICallback(poi);
         }

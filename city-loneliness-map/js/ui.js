@@ -14,6 +14,8 @@ function showToast(message, duration = 2500) {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'clm-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
     toast.style.cssText = `
       position: fixed;
       top: 1rem;
@@ -48,6 +50,8 @@ function showToast(message, duration = 2500) {
 
 export function initUI() {
   initNavbarScroll();
+  initMobileNavigation();
+  initLiveClock();
   initTabs();
   initProfile();
   initDemo();
@@ -58,6 +62,141 @@ export function initUI() {
   initResetData();
   initApiKey();
   initSmoothScroll();
+  initQuickCheckinActions();
+  initDialogAccessibility();
+  initMobileMarkVisibility();
+  updateSignalCount();
+}
+
+function initMobileNavigation() {
+  const toggle = document.getElementById('mobile-menu-toggle');
+  const menu = document.getElementById('mobile-nav');
+  if (!toggle || !menu) return;
+
+  const setOpen = (open) => {
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? '关闭页面导航' : '打开页面导航');
+    menu.hidden = !open;
+    document.body.classList.toggle('mobile-nav-open', open);
+  };
+
+  toggle.addEventListener('click', () => {
+    setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+  });
+  menu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') setOpen(false);
+  });
+}
+
+function initMobileMarkVisibility() {
+  const hero = document.getElementById('hero');
+  if (!hero || !('IntersectionObserver' in window)) {
+    document.body.classList.add('show-mobile-mark');
+    return;
+  }
+  new IntersectionObserver(([entry]) => {
+    document.body.classList.toggle('show-mobile-mark', !entry.isIntersecting);
+  }, { threshold: 0.08 }).observe(hero);
+}
+
+function initLiveClock() {
+  const clock = document.getElementById('city-clock');
+  if (!clock) return;
+  const update = () => {
+    const now = new Date();
+    const value = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Shanghai',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(now);
+    clock.textContent = value;
+    clock.setAttribute('datetime', value);
+  };
+  update();
+  window.setInterval(update, 30000);
+}
+
+function updateSignalCount() {
+  const count = document.getElementById('map-signal-count');
+  if (count) count.textContent = `${getCheckins().length} 处演示微光`;
+}
+
+function initQuickCheckinActions() {
+  document.querySelectorAll('[data-open-checkin]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (button.dataset.checkinSource === 'profile' && currentCheckin) {
+        openCheckinForm(currentCheckin.lat, currentCheckin.lng);
+        return;
+      }
+
+      const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+      document.getElementById('dashboard')?.scrollIntoView({ behavior, block: 'start' });
+      const mapButton = document.getElementById('add-checkin-btn');
+      if (mapButton?.getAttribute('aria-pressed') !== 'true') {
+        window.setTimeout(() => mapButton?.click(), 450);
+      }
+    });
+  });
+}
+
+function initDialogAccessibility() {
+  let lastFocused = null;
+  const overlays = document.querySelectorAll('.modal-overlay');
+
+  const syncOverlay = (overlay) => {
+    const isOpen = overlay.classList.contains('show');
+    overlay.setAttribute('aria-hidden', String(!isOpen));
+    const hasOpenDialog = Boolean(document.querySelector('.modal-overlay.show'));
+    document.querySelector('.page-content')?.toggleAttribute('inert', hasOpenDialog);
+    document.querySelector('.navbar')?.toggleAttribute('inert', hasOpenDialog);
+    document.querySelector('.mobile-mark-button')?.toggleAttribute('inert', hasOpenDialog);
+    if (isOpen) {
+      lastFocused = document.activeElement;
+      window.setTimeout(() => {
+        const target = overlay.querySelector('input, button, [tabindex="0"], .modal');
+        target?.focus();
+      }, 0);
+    } else if (lastFocused instanceof HTMLElement && document.contains(lastFocused)) {
+      lastFocused.focus();
+    }
+  };
+
+  overlays.forEach(overlay => {
+    new MutationObserver(() => syncOverlay(overlay)).observe(overlay, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    syncOverlay(overlay);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    const openOverlay = document.querySelector('.modal-overlay.show');
+    if (!openOverlay) return;
+
+    if (event.key === 'Escape') {
+      openOverlay.classList.remove('show');
+      document.body.style.overflow = '';
+      return;
+    }
+
+    if (event.key === 'Tab') {
+      const focusable = Array.from(openOverlay.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+      )).filter(element => element.offsetParent !== null);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
 }
 
 function initNavbarScroll() {
@@ -132,6 +271,7 @@ export function renderProfile(checkin) {
   const profileCoords = document.getElementById('profile-coords');
   const meterValue = document.getElementById('meter-value');
   const meterFill = document.getElementById('meter-fill');
+  const meterBar = document.querySelector('.meter-bar');
   const emotionTags = document.getElementById('emotion-tags');
   const messagesList = document.getElementById('messages-list');
   const aiAnalysisText = document.getElementById('ai-analysis-text');
@@ -144,6 +284,7 @@ export function renderProfile(checkin) {
   }
   if (meterValue) meterValue.textContent = (checkin.score || 50) + '/100';
   if (meterFill) meterFill.style.width = (checkin.score || 50) + '%';
+  if (meterBar) meterBar.setAttribute('aria-valuenow', String(checkin.score || 50));
 
   if (emotionTags) {
     emotionTags.innerHTML = (checkin.tags || []).map(tag => `<span class="emotion-tag">${tag}</span>`).join('');
@@ -169,6 +310,7 @@ export function renderProfile(checkin) {
   }
 
   renderNearby(checkin);
+  updateSignalCount();
 }
 
 function renderNearby(centerCheckin) {
@@ -197,8 +339,8 @@ function renderNearby(centerCheckin) {
         </div>
         <div class="nearby-distance">${distance}</div>
         <div class="nearby-actions">
-          <button class="nearby-action-btn chat-trigger" title="发起对话">&#128172;</button>
-          <button class="nearby-action-btn voice-trigger" title="语音通话">&#127908;</button>
+          <button class="nearby-action-btn chat-trigger" type="button" title="模拟对话" aria-label="与${name}开始模拟对话">&#128172;</button>
+          <button class="nearby-action-btn voice-trigger" type="button" title="模拟语音" aria-label="与${name}开始模拟语音互动">&#127908;</button>
         </div>
       </div>
     `;
@@ -209,19 +351,41 @@ function renderNearby(centerCheckin) {
 
 /* ========== 档案面板标签页切换 ========== */
 function initTabs() {
-  const profileTabs = document.querySelectorAll('.profile-tab');
-  const tabContents = document.querySelectorAll('.tab-content');
+  const profileTabs = Array.from(document.querySelectorAll('.profile-tab'));
+  const tabContents = Array.from(document.querySelectorAll('.tab-content'));
 
-  profileTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const targetTab = tab.dataset.tab;
+  const activateTab = (tab, moveFocus = false) => {
+    profileTabs.forEach(t => {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+      t.setAttribute('tabindex', '-1');
+    });
+    tabContents.forEach(content => content.classList.remove('active'));
 
-      profileTabs.forEach(t => t.classList.remove('active'));
-      tabContents.forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    tab.setAttribute('aria-selected', 'true');
+    tab.setAttribute('tabindex', '0');
+    document.getElementById('tab-' + tab.dataset.tab)?.classList.add('active');
+    if (moveFocus) tab.focus();
+  };
 
-      tab.classList.add('active');
-      const targetContent = document.getElementById('tab-' + targetTab);
-      if (targetContent) targetContent.classList.add('active');
+  profileTabs.forEach((tab, index) => {
+    tab.id = tab.id || `profile-tab-${tab.dataset.tab}`;
+    tab.setAttribute('tabindex', tab.classList.contains('active') ? '0' : '-1');
+    const panel = document.getElementById('tab-' + tab.dataset.tab);
+    panel?.setAttribute('role', 'tabpanel');
+    panel?.setAttribute('aria-labelledby', tab.id);
+
+    tab.addEventListener('click', () => activateTab(tab));
+    tab.addEventListener('keydown', event => {
+      let nextIndex = null;
+      if (event.key === 'ArrowRight') nextIndex = (index + 1) % profileTabs.length;
+      if (event.key === 'ArrowLeft') nextIndex = (index - 1 + profileTabs.length) % profileTabs.length;
+      if (event.key === 'Home') nextIndex = 0;
+      if (event.key === 'End') nextIndex = profileTabs.length - 1;
+      if (nextIndex == null) return;
+      event.preventDefault();
+      activateTab(profileTabs[nextIndex], true);
     });
   });
 }
@@ -233,28 +397,32 @@ function initCheckinForm() {
     formEl = document.createElement('div');
     formEl.id = 'checkin-form-modal';
     formEl.className = 'modal-overlay';
+    formEl.setAttribute('role', 'dialog');
+    formEl.setAttribute('aria-modal', 'true');
+    formEl.setAttribute('aria-labelledby', 'checkin-form-title');
+    formEl.setAttribute('aria-hidden', 'true');
     formEl.innerHTML = `
-      <div class="modal" style="max-width: 420px;">
-        <button class="modal-close" id="checkin-form-close">&times;</button>
-        <h2>标记此刻的情绪</h2>
+      <div class="modal" style="max-width: 420px;" tabindex="-1">
+        <button class="modal-close" id="checkin-form-close" type="button" aria-label="关闭标记表单">&times;</button>
+        <h2 id="checkin-form-title">标记此刻的情绪</h2>
         <p class="modal-subtitle">在地图上留下一个情绪坐标，不需要透露身份</p>
         <form id="checkin-form" style="display:flex;flex-direction:column;gap:1rem;">
           <div>
-            <label style="display:block;font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem;">地点名称</label>
+            <label for="checkin-name" style="display:block;font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem;">地点名称</label>
             <input type="text" id="checkin-name" class="demo-input" placeholder="例如：末班地铁站" required />
           </div>
           <div>
-            <label style="display:block;font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem;">此刻的感受</label>
+            <label for="checkin-text" style="display:block;font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem;">此刻的感受</label>
             <input type="text" id="checkin-text" class="demo-input" placeholder="用一句话描述..." required />
           </div>
           <div>
-            <label style="display:block;font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem;">孤独指数 <span id="checkin-score-value">50</span>/100</label>
+            <label for="checkin-score" style="display:block;font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem;">自报情绪强度 <span id="checkin-score-value">50</span>/100</label>
             <input type="range" id="checkin-score" min="1" max="100" value="50" style="width:100%;" />
           </div>
           <div>
-            <label style="display:block;font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem;">情绪标签</label>
-            <div id="checkin-tags" style="display:flex;flex-wrap:wrap;gap:0.5rem;">
-              ${Object.keys(EMOTION_TYPES).slice(0, 12).map(tag => `<button type="button" class="emotion-tag" data-tag="${tag}" style="cursor:pointer;">${tag}</button>`).join('')}
+            <div style="display:block;font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem;" id="checkin-tags-label">情绪标签（可多选）</div>
+            <div id="checkin-tags" role="group" aria-labelledby="checkin-tags-label" style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+              ${Object.keys(EMOTION_TYPES).slice(0, 12).map(tag => `<button type="button" class="emotion-tag" data-tag="${tag}" aria-pressed="false" style="cursor:pointer;">${tag}</button>`).join('')}
             </div>
           </div>
           <button type="submit" class="demo-btn" style="margin-top:0.5rem;">确认标记</button>
@@ -294,6 +462,7 @@ function initCheckinForm() {
     tagsContainer.addEventListener('click', (e) => {
       if (e.target.classList.contains('emotion-tag')) {
         e.target.classList.toggle('active');
+        e.target.setAttribute('aria-pressed', String(e.target.classList.contains('active')));
       }
     });
   }
@@ -341,11 +510,16 @@ function initCheckinForm() {
       document.body.style.overflow = '';
       form.reset();
       if (scoreValue) scoreValue.textContent = '50';
-      document.querySelectorAll('#checkin-tags .emotion-tag.active').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('#checkin-tags .emotion-tag.active').forEach(el => {
+        el.classList.remove('active');
+        el.setAttribute('aria-pressed', 'false');
+      });
 
       refreshMarkers();
       selectCheckin(newCheckin);
       renderProfile(newCheckin);
+      updateSignalCount();
+      showToast('已匿名留下这枚情绪坐标');
     });
   }
 }
@@ -461,10 +635,11 @@ function bindChatTriggers() {
     }
   }
 
-  if (chatClose) chatClose.addEventListener('click', closeChat);
-  chatModal.addEventListener('click', (e) => {
-    if (e.target === chatModal) closeChat();
-  });
+  if (chatModal.dataset.handlersBound !== 'true') {
+    if (chatClose) chatClose.addEventListener('click', closeChat);
+    chatModal.addEventListener('click', (e) => {
+      if (e.target === chatModal) closeChat();
+    });
 
   function sendMessage() {
     const text = chatInput.value.trim();
@@ -499,8 +674,8 @@ function bindChatTriggers() {
     });
   }
 
-  if (voiceBtn) {
-    voiceBtn.addEventListener('click', () => {
+    if (voiceBtn) {
+      voiceBtn.addEventListener('click', () => {
       if (!voiceCallActive) {
         voiceCallActive = true;
         voiceIndicator.classList.add('show');
@@ -522,7 +697,9 @@ function bindChatTriggers() {
         voiceBtn.style.color = '';
         voiceBtn.style.borderColor = '';
       }
-    });
+      });
+    }
+    chatModal.dataset.handlersBound = 'true';
   }
 
   document.querySelectorAll('.chat-trigger').forEach(btn => {

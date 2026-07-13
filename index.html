@@ -2,23 +2,510 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=./city-loneliness-map/index.html?v=2">
-  <title>城市孤独地图</title>
-  <style>
-    body {
-      background: #0d1117;
-      color: #d8dde4;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-    }
-    a { color: #7a9cc6; text-decoration: none; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="城市孤独地图 —— 一个基于地理位置的匿名城市情绪观察与表达平台">
+  <meta name="theme-color" content="#0d191b">
+  <title>城市孤独地图 | City Loneliness Map</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%2383d6c5' opacity='.85'/%3E%3C/svg%3E">
+  <!-- Fonts -->
+  <link rel="preload" href="./city-loneliness-map/_shared/fonts/Outfit-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="./city-loneliness-map/_shared/fonts/Tektur-Medium.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="./city-loneliness-map/_shared/fonts/GeistMono-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <!-- App styles -->
+  <link rel="stylesheet" href="./city-loneliness-map/css/base.css">
+  <link rel="stylesheet" href="./city-loneliness-map/css/sections.css">
+  <link rel="stylesheet" href="./city-loneliness-map/css/components.css">
+  <link rel="stylesheet" href="./city-loneliness-map/css/redesign.css">
+  <link rel="stylesheet" href="./city-loneliness-map/css/responsive.css">
 </head>
 <body>
-  <p>正在跳转至 <a href="./city-loneliness-map/index.html">城市孤独地图</a>...</p>
+  <a href="#hero" class="skip-link">跳转到主要内容</a>
+  <canvas id="particle-canvas" aria-hidden="true"></canvas>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar" role="navigation" aria-label="主导航">
+    <div class="navbar-inner">
+      <a class="logo" href="#hero" aria-label="城市孤独地图首页">
+        <span class="logo-icon" aria-hidden="true">●</span>
+        <span>城市孤独地图</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#dashboard">情绪地图</a></li>
+        <li><a href="#approach">项目理念</a></li>
+        <li><a href="#features">核心能力</a></li>
+        <li><a href="#stories">城市故事</a></li>
+        <li><a href="#demo">AI 演示</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="nav-action" id="api-key-toggle" type="button" aria-expanded="false" aria-controls="api-key-wrap">
+          <span>配置 Key</span>
+        </button>
+        <button class="nav-action" id="location-btn" type="button">
+          <span class="location-dot" aria-hidden="true"></span>
+          <span id="location-text">未定位</span>
+        </button>
+        <button class="nav-action nav-action-secondary" id="reset-data-btn" type="button" title="重置体验数据">
+          <span>重置</span>
+        </button>
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav" aria-label="打开页面导航">
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+    <div class="api-key-wrap" id="api-key-wrap" style="display: none;">
+      <input type="text" class="api-key-input" id="api-key-input" placeholder="DeepSeek API Key" autocomplete="off">
+      <button class="demo-btn" id="api-key-save" type="button">保存</button>
+    </div>
+    <div class="mobile-nav" id="mobile-nav" hidden>
+      <a href="#dashboard">情绪地图</a>
+      <a href="#approach">项目理念</a>
+      <a href="#features">核心能力</a>
+      <a href="#stories">城市故事</a>
+      <a href="#demo">AI 演示</a>
+    </div>
+  </nav>
+
+  <main class="page-content">
+    <!-- Hero -->
+    <section class="hero" id="hero" aria-labelledby="hero-title">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-overlay" aria-hidden="true"></div>
+      <div class="hero-content">
+        <div class="hero-kicker">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span>实时城市情绪信号接收中</span>
+        </div>
+        <h1 class="hero-title" id="hero-title">
+          <span>城市</span>
+          <span>孤独地图</span>
+        </h1>
+        <p class="hero-desc">
+          一座城市的孤独从不发声，却以微光的形式散落在地铁末班车、便利店的热气、天台的风里。<br>
+          在这里标记你的情绪坐标，看见陌生人的匿名低语，让孤独成为一种可被温柔观察的城市现象。
+        </p>
+        <div class="hero-actions">
+          <a href="#dashboard" class="hero-cta hero-cta-primary">
+            <span>打开情绪地图</span>
+            <span aria-hidden="true">↓</span>
+          </a>
+          <a href="#demo" class="hero-cta hero-cta-secondary">
+            <span>体验 AI 情绪分析</span>
+          </a>
+        </div>
+        <p class="hero-privacy">无需注册 · 匿名标记 · 本地优先存储 · DeepSeek API 可选</p>
+      </div>
+
+      <div class="hero-signal-window" aria-hidden="true">
+        <div class="signal-window-head">
+          <span>CITY SIGNAL_2026</span>
+          <time id="city-clock">--:--</time>
+        </div>
+        <blockquote>"凌晨两点的便利店，关东煮的热气是我今天感受到的唯一温度。"</blockquote>
+        <div class="signal-orbit">
+          <div class="signal-core"></div>
+          <div class="signal-ring signal-ring-one"></div>
+          <div class="signal-ring signal-ring-two"></div>
+          <div class="signal-coordinate">
+            31.2304°N<br>121.4737°E<br>SHANGHAI
+          </div>
+        </div>
+        <div class="signal-window-foot">
+          <span><span class="signal-level signal-level-high" aria-hidden="true"></span> 信号强度：高</span>
+          <span id="map-signal-count">0 处演示微光</span>
+        </div>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-number">12</span>
+          <span class="hero-stat-label">覆盖城市</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-number">3.2k</span>
+          <span class="hero-stat-label">匿名情绪坐标</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-number">8</span>
+          <span class="hero-stat-label">孤独类型模型</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-number">0</span>
+          <span class="hero-stat-label">社交压力</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard: Map + Profile -->
+    <section class="section section-dashboard" id="dashboard" aria-labelledby="dashboard-title">
+      <div class="section-header section-header-left">
+        <span class="section-kicker">Emotion Dashboard</span>
+        <h2 class="section-title" id="dashboard-title">城市情绪观测台</h2>
+        <p class="section-subtitle">点击地图上的微光，阅读这个地点的匿名情绪档案；你也可以标记此刻，留下自己的情绪坐标。</p>
+      </div>
+      <div class="dashboard-status">
+        <div>
+          <span class="live-dot" aria-hidden="true"></span>
+          <strong>演示模式</strong>
+          <span>已加载上海示例数据</span>
+        </div>
+        <span class="dashboard-status-note">数据来源：浏览器本地 + OpenStreetMap POI</span>
+      </div>
+      <div class="dashboard">
+        <div class="map-panel">
+          <div class="map-toolbar">
+            <button class="map-tool-btn map-tool-primary" id="locate-me-btn" type="button">
+              <span aria-hidden="true">◎</span> 定位到我
+            </button>
+            <span class="map-toolbar-divider" aria-hidden="true"></span>
+            <button class="map-tool-btn" id="add-checkin-btn" type="button" aria-pressed="false">
+              <span aria-hidden="true">＋</span> 标记此刻
+            </button>
+            <button class="map-tool-btn" id="toggle-shops-btn" type="button" aria-pressed="false">
+              <span aria-hidden="true">⌂</span> 门店
+            </button>
+            <button class="map-tool-btn" id="toggle-bus-btn" type="button" aria-pressed="false">
+              <span aria-hidden="true">★</span> 公交站
+            </button>
+          </div>
+          <div class="map-container">
+            <div id="leaflet-map" role="application" aria-label="城市情绪地图"></div>
+            <div class="map-mode-hint" id="map-mode-hint">点击微光查看情绪档案</div>
+            <div class="map-legend">
+              <span><span class="signal-level signal-level-mid" aria-hidden="true"></span> 情绪标记</span>
+              <span><span class="signal-level signal-level-high" aria-hidden="true"></span> 当前位置</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="profile-panel" aria-label="地点情绪档案">
+          <div class="profile-header">
+            <span class="profile-eyebrow">Location Profile</span>
+            <h3 class="profile-location" id="profile-name">选择一个微光</h3>
+            <p class="profile-coords" id="profile-coords">--</p>
+            <button class="profile-mark-action" data-open-checkin data-checkin-source="profile" type="button">
+              <span aria-hidden="true">＋</span> 在此标记
+            </button>
+          </div>
+
+          <div class="profile-tabs" role="tablist" aria-label="档案标签页">
+            <button class="profile-tab active" data-tab="overview" role="tab" aria-selected="true" type="button">情绪概览</button>
+            <button class="profile-tab" data-tab="nearby" role="tab" aria-selected="false" type="button">附近的人</button>
+            <button class="profile-tab" data-tab="notes" role="tab" aria-selected="false" type="button">小纸条</button>
+          </div>
+
+          <div class="tab-content active" id="tab-overview" role="tabpanel">
+            <div class="loneliness-meter">
+              <div class="meter-label">
+                <span>自报孤独强度</span>
+                <span id="meter-value">--/100</span>
+              </div>
+              <div class="meter-bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="孤独强度">
+                <div class="meter-fill" id="meter-fill" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="emotion-tags" id="emotion-tags"></div>
+            <div class="messages-section">
+              <h4>此刻的低语</h4>
+              <div id="messages-list"></div>
+            </div>
+            <div class="ai-analysis">
+              <h4><span aria-hidden="true">◈</span> AI 情绪解读</h4>
+              <p id="ai-analysis-text">点击地图上的情绪标记，查看 AI 对这个地点孤独模式的解读。</p>
+            </div>
+          </div>
+
+          <div class="tab-content" id="tab-nearby" role="tabpanel">
+            <div class="nearby-list" id="nearby-list"></div>
+          </div>
+
+          <div class="tab-content" id="tab-notes" role="tabpanel">
+            <div class="notes-context" id="notes-context">
+              <span>正在查看：</span>
+              <strong id="notes-context-name">--</strong>
+              <button id="notes-context-clear" type="button">清除筛选</button>
+            </div>
+            <div class="notes-wall" id="notes-wall"></div>
+            <div class="note-input-area">
+              <div class="note-input-wrap">
+                <input type="text" class="note-input" id="note-input" placeholder="在这座城市留下一张匿名小纸条…" maxlength="200">
+                <button class="note-submit" id="note-submit" type="button">留下</button>
+              </div>
+              <p class="demo-privacy-note" id="note-input-context">纸条将留在当前位置附近</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Approach -->
+    <section class="section section-approach" id="approach" aria-labelledby="approach-title">
+      <div class="approach-grid">
+        <div class="approach-lead">
+          <span class="section-kicker">Our Approach</span>
+          <h2 class="section-title" id="approach-title">把孤独从私人情绪，变成可被温柔观察的城市现象</h2>
+        </div>
+        <div class="approach-body">
+          <p>城市孤独地图不是一款社交软件，也不是心理治疗工具。它是一个「城市情绪观察平台」：我们相信，当一个人把自己的孤独轻轻放在某个坐标上时，这种情绪就从密闭的房间里走了出来，成为城市肌理的一部分。</p>
+          <p>通过地理位置、匿名表达与 AI 情绪分析，我们希望让孤独的个体意识到：你不是唯一在这个地铁口、这间便利店、这栋出租屋里感到孤单的人。城市很大，但孤独有相似的形状。</p>
+          <p>所有数据默认存储在本地浏览器中，你可以在没有账号、没有 DeepSeek API Key 的情况下完整体验 Demo。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section" id="features" aria-labelledby="features-title">
+      <div class="section-header">
+        <span class="section-kicker">Capabilities</span>
+        <h2 class="section-title" id="features-title">核心能力</h2>
+        <p class="section-subtitle">从定位到表达，从观察到连接，用尽量轻的方式承载城市里的孤独瞬间。</p>
+      </div>
+      <div class="capabilities-grid">
+        <article class="capability-card">
+          <span class="capability-number">01</span>
+          <h3>地理情绪标记</h3>
+          <p>在真实城市地图上标记你的情绪坐标，无需暴露身份。每个标记都是一枚「城市孤独微光」。</p>
+        </article>
+        <article class="capability-card">
+          <span class="capability-number">02</span>
+          <h3>AI 情绪分析</h3>
+          <p>接入 DeepSeek 大模型（可选 Key），自动识别孤独类型、情绪强度，并给出低压力行动建议。</p>
+        </article>
+        <article class="capability-card">
+          <span class="capability-number">03</span>
+          <h3>附近的人</h3>
+          <p>基于距离发现同一片区域的情绪标记，开启匿名模拟对话或语音互动，不留下真实身份。</p>
+        </article>
+        <article class="capability-card">
+          <span class="capability-number">04</span>
+          <h3>地点小纸条</h3>
+          <p>在地铁口、便利店、公交站等城市节点留下匿名纸条，也可以回复陌生人留下的只言片语。</p>
+        </article>
+        <article class="capability-card">
+          <span class="capability-number">05</span>
+          <h3>个人情绪报告</h3>
+          <p>汇总你留下的所有坐标，生成可视化的孤独类型分布与 AI 洞察，帮助你看见自己的情绪地图。</p>
+        </article>
+        <article class="capability-card">
+          <span class="capability-number">06</span>
+          <h3>本地优先存储</h3>
+          <p>所有标记与纸条默认保存在浏览器 localStorage 中，没有后端，没有账号体系，打开即用。</p>
+        </article>
+        <article class="capability-card">
+          <span class="capability-number">07</span>
+          <h3>真实 POI 叠加</h3>
+          <p>通过 Overpass API 拉取附近便利店、咖啡馆、公交站等真实地点，让情绪与真实城市空间对齐。</p>
+        </article>
+        <article class="capability-card">
+          <span class="capability-number">08</span>
+          <h3>忧郁平静的视觉</h3>
+          <p>湿沥青、地铁出口的薄荷绿、钠灯琥珀。用克制的色彩与缓慢的动效，营造不被打扰的平静感。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Cases -->
+    <section class="section section-cases" id="cases" aria-labelledby="cases-title">
+      <div class="case-study-grid">
+        <div class="case-study-media">
+          <img src="./city-loneliness-map/assets/city_night_aerial_1280x720.jpg" alt="城市夜景俯瞰" loading="lazy">
+          <div class="case-study-caption">
+            <span>上海 · 深夜</span>
+            <span>匿名情绪聚合</span>
+          </div>
+        </div>
+        <div class="case-study-body">
+          <div class="case-study-lead">
+            <span class="section-kicker">Case Study</span>
+            <h2 class="section-title" id="cases-title">为什么深夜便利店会成为孤独的灯塔？</h2>
+            <p>在 Demo 数据中，深夜便利店是情绪强度最高的地点类型之一。人们在这里购买关东煮、热豆浆、啤酒，不是为了食物，而是为了被一盏灯、一个陌生人的「欢迎光临」短暂地接住。</p>
+          </div>
+          <div class="case-study-stats">
+            <div class="case-study-stat">
+              <span class="case-study-number">72<span>/100</span></span>
+              <span class="case-study-label">平均孤独强度</span>
+            </div>
+            <div class="case-study-stat">
+              <span class="case-study-number">34<span>%</span></span>
+              <span class="case-study-label">提及"温度"</span>
+            </div>
+            <div class="case-study-stat">
+              <span class="case-study-number">02<span>:00</span></span>
+              <span class="case-study-label">高频时段</span>
+            </div>
+          </div>
+          <div class="case-study-insight">
+            <h4>AI 洞察</h4>
+            <p>深夜便利店的孤独带有强烈的「温度隐喻」——用户通过食物、灯光、店员问候寻求替代性温暖。这提示我们：缓解孤独不一定需要深度社交，有时只需要一个「被看见」的公共空间。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stories -->
+    <section class="section section-stories" id="stories" aria-labelledby="stories-title">
+      <div class="section-header">
+        <span class="section-kicker">Urban Stories</span>
+        <h2 class="section-title" id="stories-title">城市故事</h2>
+        <p class="section-subtitle">来自 Demo 数据的匿名片段，它们曾经真实地发生在某个城市的某个角落。</p>
+      </div>
+      <div class="stories-grid">
+        <article class="story-card story-card-featured">
+          <div class="story-image">
+            <img src="./city-loneliness-map/assets/calm_map_mist_1280x720.jpg" alt="雾中城市地图" loading="lazy">
+          </div>
+          <div class="story-content">
+            <span class="story-tag">Featured</span>
+            <h3>末班地铁上的标点符号</h3>
+            <p>"车厢里只剩下我和一个打瞌睡的保安，我们像两个被城市遗忘的标点符号。" 上海末班地铁的孤独，是一种「人群散尽后的归属感缺失」。</p>
+            <div class="story-meta">
+              <span>人民广场地铁站</span>
+              <span>87/100 孤独强度</span>
+            </div>
+          </div>
+        </article>
+        <article class="story-card">
+          <div class="story-content">
+            <span class="story-tag">Beijing</span>
+            <h3>国贸早高峰的匿名河流</h3>
+            <p>"西装革履的人群像一条沉默的河流，我也是其中一滴。" 高密度人流反而强化了匿名感。</p>
+            <div class="story-meta">
+              <span>国贸地铁站</span>
+              <span>81/100</span>
+            </div>
+          </div>
+        </article>
+        <article class="story-card">
+          <div class="story-content">
+            <span class="story-tag">Shenzhen</span>
+            <h3>科技园出租房的回音</h3>
+            <p>"加班回到出租屋，连回音都没有。" 工作与居住的边界模糊，让疲惫与孤独混为一体。</p>
+            <div class="story-meta">
+              <span>深圳湾附近</span>
+              <span>88/100</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- AI Demo -->
+    <section class="section section-demo" id="demo" aria-labelledby="demo-title">
+      <div class="section-header">
+        <span class="section-kicker">AI Demo</span>
+        <h2 class="section-title" id="demo-title">描述一个让你感到孤独的瞬间</h2>
+        <p class="section-subtitle">无需登录，输入一句话，本地模型会给出孤独类型、情绪解读与低压力建议。如需更精准分析，可临时配置 DeepSeek API Key。</p>
+      </div>
+      <div class="demo-section">
+        <div class="demo-input-area">
+          <label for="demo-input">例如：凌晨两点的便利店，关东煮的热气是我今天感受到的唯一温度。</label>
+          <div class="demo-input-wrap">
+            <input type="text" class="demo-input" id="demo-input" placeholder="输入你的孤独瞬间…" maxlength="200">
+            <button class="demo-btn" id="demo-btn" type="button">分析情绪</button>
+          </div>
+        </div>
+        <div class="demo-result" id="demo-result" aria-live="polite">
+          <div class="result-card">
+            <div class="result-label">孤独类型</div>
+            <div class="result-content" id="result-type"></div>
+          </div>
+          <div class="result-card">
+            <div class="result-label">情绪解读</div>
+            <div class="result-content" id="result-analysis"></div>
+          </div>
+          <div class="result-card">
+            <div class="result-label">低压力建议</div>
+            <div class="result-content" id="result-suggestion"></div>
+          </div>
+          <div class="suggestion-chips" id="suggestion-chips"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section cta-section" aria-labelledby="cta-title">
+      <h2 id="cta-title">生成你的城市孤独报告</h2>
+      <p>在地图上留下几个情绪坐标后，点击生成报告，看看你的孤独在城市里呈现什么形状。</p>
+      <button class="cta-btn" id="cta-btn" type="button">
+        <span aria-hidden="true">◈</span>
+        <span>查看我的情绪报告</span>
+      </button>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="logo" href="#hero">
+          <span class="logo-icon" aria-hidden="true">●</span>
+          <span>城市孤独地图</span>
+        </a>
+        <p>一个基于浏览器原生能力的匿名城市情绪观察平台。没有后端，没有账号，只有城市与孤独之间温柔的连接。</p>
+      </div>
+      <div class="footer-disclaimer">
+        <p><strong>声明</strong></p>
+        <p>本项目为创意 Demo，所有情绪数据默认仅存储在本地浏览器中。AI 分析结果不构成心理诊断或治疗建议。如果你正经历严重的心理困扰，请寻求专业帮助。</p>
+      </div>
+      <div class="footer-links">
+        <span>技术栈</span>
+        <a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet.js</a>
+        <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a>
+        <a href="https://carto.com/basemaps/" target="_blank" rel="noopener">CARTO Dark Tiles</a>
+        <a href="https://www.deepseek.com/" target="_blank" rel="noopener">DeepSeek API（可选）</a>
+      </div>
+    </div>
+    <div class="footer-credit">
+      <p>© 2026 城市孤独地图 · Built with TRAE & DeepSeek · 部署于 GitHub Pages</p>
+    </div>
+  </footer>
+
+  <!-- Report Modal -->
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal" tabindex="-1">
+      <button class="modal-close" id="modal-close" type="button" aria-label="关闭报告">&times;</button>
+      <h2 id="modal-title">我的城市孤独报告</h2>
+      <p class="modal-subtitle">基于你留下的情绪坐标生成的匿名分析</p>
+      <div id="report-content"></div>
+    </div>
+  </div>
+
+  <!-- Chat Modal -->
+  <div class="modal-overlay" id="chat-modal" role="dialog" aria-modal="true" aria-labelledby="chat-username" aria-hidden="true">
+    <div class="modal chat-modal" tabindex="-1">
+      <div class="chat-header">
+        <div class="chat-header-avatar" id="chat-avatar">🌙</div>
+        <div class="chat-header-info">
+          <div class="chat-header-name" id="chat-username">夜行者</div>
+          <div class="chat-header-status">在线 · 模拟匿名对话</div>
+        </div>
+        <div class="chat-actions">
+          <button class="chat-action-btn" id="voice-btn" type="button" title="模拟语音" aria-label="模拟语音通话">🎤</button>
+          <button class="chat-action-btn" id="chat-close" type="button" aria-label="关闭对话">&times;</button>
+        </div>
+      </div>
+      <div class="voice-indicator" id="voice-indicator">
+        <span aria-hidden="true">●</span>
+        <span>正在模拟语音通话…</span>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-area">
+        <input type="text" class="chat-input" id="chat-input" placeholder="发送一条匿名消息…" maxlength="200">
+        <button class="chat-send-btn" id="chat-send" type="button" aria-label="发送消息">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile mark button -->
+  <button class="mobile-mark-button" id="mobile-mark-button" type="button" data-open-checkin>
+    <span aria-hidden="true">＋</span>
+    <span>标记此刻</span>
+  </button>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script type="module" src="./city-loneliness-map/js/app.js"></script>
 </body>
 </html>

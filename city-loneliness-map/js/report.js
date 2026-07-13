@@ -146,7 +146,7 @@ function renderReport() {
         </div>
         <div class="report-stat">
           <span class="number">${avgScore}</span>
-          <span class="label">平均孤独指数</span>
+          <span class="label">平均自报强度</span>
         </div>
       </div>
     </div>

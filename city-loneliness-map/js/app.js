@@ -6,6 +6,12 @@ import { initReport } from './report.js';
 function initParticles() {
   const canvas = document.getElementById('particle-canvas');
   if (!canvas) return;
+  const saveData = navigator.connection?.saveData;
+  const compactViewport = window.matchMedia('(max-width: 768px)').matches;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || saveData || compactViewport) {
+    canvas.hidden = true;
+    return;
+  }
 
   const ctx = canvas.getContext('2d');
   let width, height;
@@ -74,8 +80,17 @@ function initParticles() {
   animate();
 }
 
+function prioritizeDashboard() {
+  const hero = document.getElementById('hero');
+  const dashboard = document.getElementById('dashboard');
+  if (hero && dashboard && hero.nextElementSibling !== dashboard) {
+    hero.insertAdjacentElement('afterend', dashboard);
+  }
+}
+
 /* ========== 应用初始化 ========== */
 document.addEventListener('DOMContentLoaded', () => {
+  prioritizeDashboard();
   initParticles();
   initMap();
   initUI();

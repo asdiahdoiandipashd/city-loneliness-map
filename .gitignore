@@ -26,3 +26,9 @@ build/
 .env
 .env.local
 .env.*.local
+
+# Agent / temporary working directories
+.agents/
+.claude/
+__tmp_index/
+frontend-design/
